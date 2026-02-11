@@ -1,25 +1,33 @@
 package task3;
 
-import java.lang.classfile.instruction.CharacterRange;
-
 public class BCipher implements ICipher {
-    public static final String ALPHABET = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+    private static final String UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+    private static final String LOWER = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
+
     @Override
     public String encode(String str) {
-        String encoded = "";
-        for(Character i : str.toCharArray()){
-            int CharIndex = (ALPHABET.length() - 1) - ALPHABET.indexOf(i);
-            encoded += ALPHABET.charAt(CharIndex);
-        }
-        return encoded;
+        return convert(str);
     }
+
     @Override
     public String decode(String str) {
-        String decoded = "";
-        for(Character i : str.toCharArray()){
-            int CharIndex = (ALPHABET.length() - 1) - ALPHABET.indexOf(i);
-            decoded += ALPHABET.charAt(CharIndex);
+        return convert(str);
+    }
+
+    private String convert(String str) {
+        StringBuilder result = new StringBuilder();
+        for (char ch : str.toCharArray()) {
+            int indexUpper = UPPER.indexOf(ch);
+            int indexLower = LOWER.indexOf(ch);
+
+            if (indexUpper >= 0) {
+                result.append(UPPER.charAt(UPPER.length() - 1 - indexUpper));
+            } else if (indexLower >= 0) {
+                result.append(LOWER.charAt(LOWER.length() - 1 - indexLower));
+            } else {
+                result.append(ch);
+            }
         }
-        return decoded;
+        return result.toString();
     }
 }

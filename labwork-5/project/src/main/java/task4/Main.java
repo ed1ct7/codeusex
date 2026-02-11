@@ -1,14 +1,10 @@
+package task4;
+
 import task4.Bank.ATMmachineMyBank;
-import task4.DBManager;
 
-import java.util.Scanner;
-
-void main() {
-    Menu();
+public class Main {
+    public static void main(String[] args) {
+        DBManager.getInstance();
+        new ATMmachineMyBank();
+    }
 }
-
-public void Menu(){
-    ATMmachineMyBank atm = new ATMmachineMyBank();
-
-}
-

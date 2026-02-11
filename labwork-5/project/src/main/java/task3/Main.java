@@ -1,11 +1,14 @@
 package task3;
 
-import static java.lang.IO.print;
-
 public class Main {
     public static void main(String[] args) {
         BCipher bCipher = new BCipher();
-        print(bCipher.encode("ВВВВ"));
-        print(bCipher.decode("ЭЭЭЭ"));
+        String source = "Привет, Мир";
+        String encoded = bCipher.encode(source);
+        String decoded = bCipher.decode(encoded);
+
+        System.out.println("Исходная строка: " + source);
+        System.out.println("Зашифрованная строка: " + encoded);
+        System.out.println("Расшифрованная строка: " + decoded);
     }
 }

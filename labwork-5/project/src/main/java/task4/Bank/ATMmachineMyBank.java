@@ -1,22 +1,5 @@
 package task4.Bank;
 
-//Задание 4. Создать класс Пользователь с полями Фамилия, имя, id, pin, поле с типом класса Счёт.
-// Создать класс Счёт с полями название(вклада), баланс, поле с типом класса Пользователь, название банка.
-// Создать интерфейс банкомат, в котором описаны следующие методы:
-//        	узнать баланс,
-//        	пополнить счёт,
-//        	снять деньги со счета,
-//        	перевести деньги с одного счета на другой.
-//        При выполнении всех операций реализовывается проверка pin. При снятии и переводе денег необходимо учесть,
-//        достаточно ли средств. В основной программе(или в отдельном файле) создать класс Банкомат банка MyBank,
-//        реализующий интерфейс банкомат. В этом классе необходимо представить реализацию всех методов интерфейса
-//        Банкомат. При снятии денег со счета необходимо сделать проверку, является ли клиент банкомата клиентом
-//        банка MyBank. Если да, то при снятии денег комиссии на операцию нет, если нет, то комиссия 2 % от суммы.
-//        При выполнении задания можно добавлять в классы дополнительные поля.
-//        В основной программе показать взаимодействие созданных классов. Для некоторых операций необходимо
-//        создать списки объектов классов.
-//
-
 import task4.Interfaces.IATMmachine;
 import task4.User.BankAccount;
 import task4.User.BankAccountRepository;
@@ -27,40 +10,32 @@ import java.util.List;
 import java.util.Scanner;
 
 public class ATMmachineMyBank implements IATMmachine {
-    public ATMmachineMyBank(){
-        EnterInterface();
+    private final Scanner sc = new Scanner(System.in);
+    private User currentUser;
+    private BankAccount currentAccount;
+
+    public ATMmachineMyBank() {
+        enterInterface();
     }
 
-    Scanner sc = new Scanner(System.in);
-    private int choose;
-    private User currentUser;
+    private void enterInterface() {
+        while (true) {
+            System.out.println("Выберите опцию:\n1 - Создать пользователя\n2 - Войти в пользователя");
+            int choose = readInt();
 
-    private void EnterInterface(){
-        while(true){
-            System.out.println("Выберите опцию: \n" +
-                    "1 - Создать пользователя\n" +
-                    "2 - Войти в пользователя");
-
-            while (!sc.hasNextInt()) {
-                sc.next();
-            }
-            choose = sc.nextInt();
-
-            switch (choose){
-                case 1:
-                    CreateUser();
-                    break;
-                case 2:
-                    EnterUser();
-                    break;
+            if (choose == 1) {
+                createUser();
+            } else if (choose == 2) {
+                enterUser();
             }
         }
     }
 
-    private void CreateUser(){
+    private void createUser() {
         System.out.println("=======================");
         System.out.println("ДОБАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯ");
         sc.nextLine();
+
         System.out.println("Введите имя: ");
         String name = sc.nextLine();
         System.out.println("Введите фамилию: ");
@@ -75,14 +50,16 @@ public class ATMmachineMyBank implements IATMmachine {
         String seriesAndNumber = sc.nextLine();
         System.out.println("Задайте пароль аккаунту: ");
         String password = sc.nextLine();
+
         UserRepository ur = new UserRepository();
         User user = new User(name, surname, secondName, address, phoneNumber, seriesAndNumber, password);
         ur.InsertMethod(user);
-        System.out.println("ПОЛЬЗОВАТЕЛЬ " + user.getName() + " ДОБАВЛЕН");
+
+        System.out.println("ПОЛЬЗОВАТЕЛЬ " + name + " ДОБАВЛЕН");
         System.out.println("=======================");
     }
 
-    private void EnterUser(){
+    private void enterUser() {
         sc.nextLine();
         System.out.println("=======================");
         System.out.println("ВХОД В АККАУНТ ПОЛЬЗОВАТЕЛЯ");
@@ -94,112 +71,246 @@ public class ATMmachineMyBank implements IATMmachine {
         String password = sc.nextLine();
 
         UserRepository ur = new UserRepository();
+        User user = ur.TryEnterAccount(seriesAndNumber, password);
 
-        if(ur.TryEnterAccount(seriesAndNumber, password) == null){
-            System.out.println("ВХОД НЕВЫПОЛНЕН, ВВЕДИТЕ КОРЕКТНЫЕ ДАННЫЕ");
+        if (user == null) {
+            System.out.println("ВХОД НЕВЫПОЛНЕН, ВВЕДИТЕ КОРРЕКТНЫЕ ДАННЫЕ");
             System.out.println("=======================");
-        } else {
-            User user = ur.TryEnterAccount(seriesAndNumber, password);
-            currentUser = user;
-            System.out.println("ВХОД СОВЕРШЕН");
-            System.out.println("=======================");
-            UserInterface();
+            return;
         }
+
+        currentUser = user;
+        System.out.println("ВХОД СОВЕРШЕН");
+        System.out.println("=======================");
+        userInterface();
     }
 
-    private void UserInterface(){;
-        System.out.println("\n=======================");
-        System.out.println("Аккаунт " + currentUser.getName());
+    private void userInterface() {
+        while (true) {
+            System.out.println("\n=======================");
+            System.out.println("Аккаунт " + currentUser.getName());
+            System.out.println("Выберите опцию:\n1 - Создать банковский аккаунт\n2 - Войти в аккаунт\n3 - Выйти");
 
-        while(true){
-            System.out.println("Выберите опцию: \n" +
-                    "1 - Создать банковский аккаунт\n" +
-                    "2 - Войти в аккаунт");
-
-            while (!sc.hasNextInt()) {
-                sc.next();
-            }
-            choose = sc.nextInt();
-
-            switch (choose){
-                case 1:
-                    CreateAccount();
-                    break;
-                case 2:
-                    EnterAccount();
-                    break;
+            int choose = readInt();
+            if (choose == 1) {
+                createAccount();
+            } else if (choose == 2) {
+                enterAccount();
+            } else if (choose == 3) {
+                currentUser = null;
+                return;
             }
         }
     }
 
-    private void CreateAccount(){
+    private void createAccount() {
         System.out.println("=======================");
         System.out.println("ДОБАВЛЕНИЕ БАНКОВСКОГО АККАУНТА");
         sc.nextLine();
+
+        System.out.println("Введите название вклада: ");
+        String contributionName = sc.nextLine();
+
+        System.out.println("Введите название банка (MyBank или другой): ");
+        String bankName = sc.nextLine();
+
         System.out.println("Задайте pin аккаунту: ");
-        int pin = sc.nextInt();
-        BankAccount bankAccount = new BankAccount("Стандарт", 0, currentUser, pin, "Сбербанк");
+        int pin = readInt();
+
+        BankAccount bankAccount = new BankAccount(contributionName, 0, currentUser, pin, bankName);
         BankAccountRepository bankAccountRepository = new BankAccountRepository();
         bankAccountRepository.InsertMethod(bankAccount);
-
-//            public BankAccount(int id, String contributionName, float balance, int userId, int pin, String BankName){
-//            this.id = id;
-//            this.contributionName = contributionName;
-//            this.balance = balance;
-//            this.userId = userId;
-//            this.pin = pin;
-//            this.BankName = BankName;
-//        }
-
 
         System.out.println("АККАУНТ ДОБАВЛЕН");
         System.out.println("=======================");
     }
 
-    private void EnterAccount(){
+    private void enterAccount() {
         System.out.println("\n=======================");
         System.out.println("БАНКОВСКИЕ АККАУНТЫ ПОЛЬЗОВАТЕЛЯ");
-        sc.nextLine();
+
         UserRepository userRepository = new UserRepository();
         List<BankAccount> bankAccountsList = userRepository.GetConnectedBankAccounts(currentUser);
-        int temp = 0;
-        for(BankAccount bankAccount : bankAccountsList){
-            System.out.println("id: " + bankAccount.getId() + "\t: " + temp);
-            temp++;
+
+        if (bankAccountsList.isEmpty()) {
+            System.out.println("Нет банковских аккаунтов");
+            return;
         }
+
+        for (int i = 0; i < bankAccountsList.size(); i++) {
+            BankAccount bankAccount = bankAccountsList.get(i);
+            System.out.println(i + " - id " + bankAccount.getId() + " | " + bankAccount.getContributionName() + " | " + bankAccount.getBankName());
+        }
+
         System.out.println("Выберите аккаунт: ");
-        int choice = sc.nextInt();
+        int choice = readInt();
 
-        System.out.println("Введите pin: ");
-        int pin = sc.nextInt();
+        if (choice < 0 || choice >= bankAccountsList.size()) {
+            System.out.println("Неверный выбор");
+            return;
+        }
 
-        BankAccountRepository bankAccountRepository = new BankAccountRepository();
-        if(bankAccountRepository.TryEnterBankAccount(bankAccountsList.get(choice), pin) == null){
-            System.out.println("Не получилось войти в аккаунт (; Попробуйте ещё раз\n");
-        } else {
-           System.out.println("Успешный вход в аккаунт\n");
-           BankAccountInterface();
+        currentAccount = bankAccountsList.get(choice);
+        System.out.println("Успешный вход в аккаунт");
+        bankAccountInterface();
+    }
+
+    private void bankAccountInterface() {
+        while (true) {
+            BankAccountRepository repository = new BankAccountRepository();
+            currentAccount = repository.GetById(currentAccount.getId());
+
+            System.out.println("\n=======================");
+            System.out.println("Счёт id " + currentAccount.getId() + ", банк: " + currentAccount.getBankName());
+            System.out.println("1 - Узнать баланс");
+            System.out.println("2 - Пополнить счёт");
+            System.out.println("3 - Снять деньги");
+            System.out.println("4 - Перевести деньги");
+            System.out.println("5 - Назад");
+
+            int choose = readInt();
+
+            if (choose == 1) {
+                System.out.println("Баланс: " + checkBalance());
+            } else if (choose == 2) {
+                System.out.println("Сумма пополнения: ");
+                float money = readFloat();
+                replenishBalance(money);
+            } else if (choose == 3) {
+                System.out.println("Сумма снятия: ");
+                float money = readFloat();
+                float result = withdrawBalance(money);
+                if (result >= 0) {
+                    System.out.println("Снято: " + result);
+                }
+            } else if (choose == 4) {
+                System.out.println("Введите id счёта получателя: ");
+                int id = readInt();
+                System.out.println("Сумма перевода: ");
+                float money = readFloat();
+                float result = makeTransaction(id, money);
+                if (result >= 0) {
+                    System.out.println("Переведено: " + result);
+                }
+            } else if (choose == 5) {
+                currentAccount = null;
+                return;
+            }
         }
     }
 
-    private void BankAccountInterface(){
-        System.out.println("\n=======================");
-        System.out.println("БАНКОВСКИЙ АККАУНТ ПОЛЬЗОВАТЕЛЯ " + currentUser.getName());
-
+    private boolean checkPin() {
+        System.out.println("Введите pin: ");
+        int enteredPin = readInt();
+        if (enteredPin != currentAccount.getPin()) {
+            System.out.println("Неверный pin");
+            return false;
+        }
+        return true;
     }
 
     @Override
-    public float checkBalance(){
-        return 0;
+    public float checkBalance() {
+        if (!checkPin()) {
+            return -1;
+        }
+
+        BankAccountRepository repository = new BankAccountRepository();
+        currentAccount = repository.GetById(currentAccount.getId());
+        return currentAccount.getBalance();
     }
+
     @Override
-    public void replenishBalance(float money){ }
-    @Override
-    public float withdrawBalance(float money){
-        return 0;
+    public void replenishBalance(float money) {
+        if (money <= 0) {
+            System.out.println("Сумма должна быть больше 0");
+            return;
+        }
+
+        if (!checkPin()) {
+            return;
+        }
+
+        BankAccountRepository repository = new BankAccountRepository();
+        BankAccount account = repository.GetById(currentAccount.getId());
+        repository.UpdateBalance(account.getId(), account.getBalance() + money);
+        currentAccount = repository.GetById(currentAccount.getId());
+        System.out.println("Баланс после пополнения: " + currentAccount.getBalance());
     }
+
     @Override
-    public float makeTransaction(int id, float money){
-        return 0;
+    public float withdrawBalance(float money) {
+        if (money <= 0) {
+            System.out.println("Сумма должна быть больше 0");
+            return -1;
+        }
+
+        if (!checkPin()) {
+            return -1;
+        }
+
+        BankAccountRepository repository = new BankAccountRepository();
+        BankAccount account = repository.GetById(currentAccount.getId());
+
+        float total = money;
+        if (!"MyBank".equalsIgnoreCase(account.getBankName())) {
+            total = money + money * 0.02f;
+        }
+
+        if (account.getBalance() < total) {
+            System.out.println("Недостаточно средств");
+            return -1;
+        }
+
+        repository.UpdateBalance(account.getId(), account.getBalance() - total);
+        currentAccount = repository.GetById(currentAccount.getId());
+        System.out.println("Баланс после снятия: " + currentAccount.getBalance());
+        return money;
+    }
+
+    @Override
+    public float makeTransaction(int id, float money) {
+        if (money <= 0) {
+            System.out.println("Сумма должна быть больше 0");
+            return -1;
+        }
+
+        if (!checkPin()) {
+            return -1;
+        }
+
+        BankAccountRepository repository = new BankAccountRepository();
+        BankAccount from = repository.GetById(currentAccount.getId());
+        BankAccount to = repository.GetById(id);
+
+        if (to == null) {
+            System.out.println("Счёт получателя не найден");
+            return -1;
+        }
+
+        if (from.getBalance() < money) {
+            System.out.println("Недостаточно средств");
+            return -1;
+        }
+
+        repository.UpdateBalance(from.getId(), from.getBalance() - money);
+        repository.UpdateBalance(to.getId(), to.getBalance() + money);
+        currentAccount = repository.GetById(currentAccount.getId());
+        System.out.println("Баланс после перевода: " + currentAccount.getBalance());
+        return money;
+    }
+
+    private int readInt() {
+        while (!sc.hasNextInt()) {
+            sc.next();
+        }
+        return sc.nextInt();
+    }
+
+    private float readFloat() {
+        while (!sc.hasNextFloat()) {
+            sc.next();
+        }
+        return sc.nextFloat();
     }
 }

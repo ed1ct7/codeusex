@@ -111,8 +111,32 @@ public class ATMmachineMyBank implements IATMmachine {
         System.out.println("Введите название вклада: ");
         String contributionName = sc.nextLine();
 
-        System.out.println("Введите название банка (MyBank или другой): ");
-        String bankName = sc.nextLine();
+        System.out.println("Выберите название банка: ");
+        System.out.println("Сбербанк : 0");
+        System.out.println("Альфабанк : 1");
+        System.out.println("Тинькофф : 2");
+        System.out.println("СПБбанк : 3");
+        System.out.println("ВТБ : 4");
+        int bankChoice = sc.nextInt();
+
+        String bankName = "";
+        switch (bankChoice){
+            case 0:
+                bankName = "Сбербанк";
+                break;
+            case 1:
+                bankName = "Альфабанк";
+                break;
+            case 2:
+                bankName = "Тинькофф";
+                break;
+            case 3:
+                bankName = "СПБбанк";
+                break;
+            case 4:
+                bankName = "ВТБ";
+                break;
+        }
 
         System.out.println("Задайте pin аккаунту: ");
         int pin = readInt();
@@ -155,6 +179,27 @@ public class ATMmachineMyBank implements IATMmachine {
         bankAccountInterface();
     }
 
+    private float enterMoney(){
+        System.out.println("Рублей: ");
+        int highDig = sc.nextInt();
+        while (highDig < 0){
+            System.out.println("!!!Недопустимое!!!");
+            highDig = sc.nextInt();
+        }
+        System.out.println("Копеек: ");
+        int lowDig = sc.nextInt();
+        while ((lowDig > 99 )){
+            System.out.println("!!!Недопустимый ввод количества копеек, повторите попытку!!!");
+            lowDig = sc.nextInt();
+        }
+        float money = (float) (highDig + lowDig * 0.01);
+        if(money == 0){
+            System.out.println("Недопустим ввод 0, повторите попытку...");
+            return enterMoney();
+        }
+        return money;
+    }
+
     private void bankAccountInterface() {
         while (true) {
             BankAccountRepository repository = new BankAccountRepository();
@@ -174,21 +219,21 @@ public class ATMmachineMyBank implements IATMmachine {
                 System.out.println("Баланс: " + checkBalance());
             } else if (choose == 2) {
                 System.out.println("Сумма пополнения: ");
-                float money = readFloat();
-                replenishBalance(money);
+                replenishBalance(enterMoney());
             } else if (choose == 3) {
                 System.out.println("Сумма снятия: ");
-                float money = readFloat();
-                float result = withdrawBalance(money);
+
+                float result = withdrawBalance(enterMoney());
+
                 if (result >= 0) {
                     System.out.println("Снято: " + result);
                 }
             } else if (choose == 4) {
                 System.out.println("Введите id счёта получателя: ");
                 int id = readInt();
-                System.out.println("Сумма перевода: ");
-                float money = readFloat();
-                float result = makeTransaction(id, money);
+
+                float result = makeTransaction(id, enterMoney());
+
                 if (result >= 0) {
                     System.out.println("Переведено: " + result);
                 }
@@ -209,6 +254,15 @@ public class ATMmachineMyBank implements IATMmachine {
         return true;
     }
 
+    public float substractMoneyOperation(float a, float b){
+        int aLowDigInt = (int) a;
+        int cop = (aLowDigInt - a);
+        return 0;
+    }
+    public float sumMoneyOperation(float a, float b){
+        return 0;
+    }
+
     @Override
     public float checkBalance() {
         if (!checkPin()) {
@@ -222,15 +276,6 @@ public class ATMmachineMyBank implements IATMmachine {
 
     @Override
     public void replenishBalance(float money) {
-        if (money <= 0) {
-            System.out.println("Сумма должна быть больше 0");
-            return;
-        }
-
-        if (!checkPin()) {
-            return;
-        }
-
         BankAccountRepository repository = new BankAccountRepository();
         BankAccount account = repository.GetById(currentAccount.getId());
         repository.UpdateBalance(account.getId(), account.getBalance() + money);
@@ -238,17 +283,9 @@ public class ATMmachineMyBank implements IATMmachine {
         System.out.println("Баланс после пополнения: " + currentAccount.getBalance());
     }
 
+
     @Override
     public float withdrawBalance(float money) {
-        if (money <= 0) {
-            System.out.println("Сумма должна быть больше 0");
-            return -1;
-        }
-
-        if (!checkPin()) {
-            return -1;
-        }
-
         BankAccountRepository repository = new BankAccountRepository();
         BankAccount account = repository.GetById(currentAccount.getId());
 
@@ -268,28 +305,15 @@ public class ATMmachineMyBank implements IATMmachine {
         return money;
     }
 
+
     @Override
     public float makeTransaction(int id, float money) {
-        if (money <= 0) {
-            System.out.println("Сумма должна быть больше 0");
-            return -1;
-        }
-
-        if (!checkPin()) {
-            return -1;
-        }
-
         BankAccountRepository repository = new BankAccountRepository();
         BankAccount from = repository.GetById(currentAccount.getId());
         BankAccount to = repository.GetById(id);
 
         if (to == null) {
             System.out.println("Счёт получателя не найден");
-            return -1;
-        }
-
-        if (from.getBalance() < money) {
-            System.out.println("Недостаточно средств");
             return -1;
         }
 

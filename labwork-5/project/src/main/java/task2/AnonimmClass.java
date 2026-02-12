@@ -1,4 +1,4 @@
-package task2.Triangle;
+package task2;
 
 interface Age{
     int x = 21;

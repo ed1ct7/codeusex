@@ -11,16 +11,20 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Scanner;
 
-public class ATMmachineMyBank implements IATMmachine {
+public abstract class ATMmachine implements IATMmachine {
     private final Scanner sc = new Scanner(System.in);
     private User currentUser;
     private BankAccount currentAccount;
+    protected Bank bank;
+    protected BigDecimal comission = BigDecimal.ZERO;
 
-    public ATMmachineMyBank() {
+    public ATMmachine() {
         enterInterface();
+        bank = null;
+        comission = new BigDecimal(0.00);
     }
 
-    private void enterInterface() {
+    protected void enterInterface() {
         while (true) {
             System.out.println("Выберите опцию:\n1 - Создать пользователя\n2 - Войти в пользователя");
             int choose = readInt();
@@ -121,22 +125,19 @@ public class ATMmachineMyBank implements IATMmachine {
         System.out.println("ВТБ : 4");
         int bankChoice = sc.nextInt();
 
-        String bankName = "";
+        Bank bankName = null;
         switch (bankChoice){
             case 0:
-                bankName = "Сбербанк";
+                bankName = Bank.Sberbank;
                 break;
             case 1:
-                bankName = "Альфабанк";
+                bankName = Bank.AlphaBank;
                 break;
             case 2:
-                bankName = "Тинькофф";
+                bankName = Bank.AlphaBank;
                 break;
             case 3:
-                bankName = "СПБбанк";
-                break;
-            case 4:
-                bankName = "ВТБ";
+                bankName = Bank.SPBbank;
                 break;
         }
 
@@ -195,7 +196,7 @@ public class ATMmachineMyBank implements IATMmachine {
             lowDig = sc.nextInt();
         }
         float money = (float) (highDig + lowDig * 0.01);
-        BigDecimal moneyBigDecimal = new BigDecimal(money).setScale(2, RoundingMode.FLOOR);
+        BigDecimal moneyBigDecimal = new BigDecimal(money).setScale(2, RoundingMode.HALF_UP);
         if(money == 0){
             System.out.println("Недопустим ввод 0, повторите попытку...");
             return enterMoney();
@@ -264,7 +265,7 @@ public class ATMmachineMyBank implements IATMmachine {
         return result;
     }
     public BigDecimal sumMoneyOperation(BigDecimal a, BigDecimal b){
-        BigDecimal money = a.add(b);
+        BigDecimal money = a.add(b).setScale(2, RoundingMode.HALF_UP);
         BigDecimal result = money;
 //        result = ((int) (money * 1000)) / 1000;
         return result;
@@ -297,8 +298,8 @@ public class ATMmachineMyBank implements IATMmachine {
         BankAccount account = repository.GetById(currentAccount.getId());
 
         BigDecimal total = money;
-        if ((!"Сбербанк".equalsIgnoreCase(account.getBankName()) && total.compareTo(new BigDecimal(100)) == 1)) {
-            total = money.add(money.multiply(new BigDecimal(0.02)));
+        if ((!bank.equals(account.getBankName()) && total.compareTo(new BigDecimal(100)) == 1)) {
+            total = money.add(money.multiply(comission));
         }
         if (account.getBalance().compareTo(total) == -1) {
             System.out.println("Недостаточно средств");

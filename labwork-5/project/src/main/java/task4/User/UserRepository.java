@@ -99,7 +99,7 @@ public class UserRepository extends User implements IRepository <User>{
                 BankAccount bankAccount = new BankAccount(
                         rs.getInt("id"),
                         rs.getString("contributionName"),
-                        rs.getFloat("balance"),
+                        rs.getBigDecimal("balance"),
                         rs.getInt("userId"),
                         rs.getInt("pin"),
                         rs.getString("bankName")

@@ -25,11 +25,9 @@ public class LimitedCounter {
     class Counter{
         private int count;
 
-
         Counter(){
             count = initialCount;
         }
-
 
         int inc(){
             return ++count;

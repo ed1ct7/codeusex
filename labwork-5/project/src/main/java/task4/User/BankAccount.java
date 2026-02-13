@@ -1,5 +1,7 @@
 package task4.User;
 
+import task4.Bank.Bank;
+
 import java.math.BigDecimal;
 
 public class BankAccount {
@@ -8,9 +10,9 @@ public class BankAccount {
     BigDecimal balance;
     int userId;
     int pin;
-    String bankName;
+    Bank bankName;
 
-    public BankAccount(int id, String contributionName, BigDecimal balance, int userId, int pin, String bankName) {
+    public BankAccount(int id, String contributionName, BigDecimal balance, int userId, int pin, Bank bankName) {
         this.id = id;
         this.contributionName = contributionName;
         this.balance = balance;
@@ -19,7 +21,7 @@ public class BankAccount {
         this.bankName = bankName;
     }
 
-    public BankAccount(String contributionName, BigDecimal balance, User user, int pin, String bankName) {
+    public BankAccount(String contributionName, BigDecimal balance, User user, int pin, Bank bankName) {
         this.contributionName = contributionName;
         this.balance = balance;
         this.userId = user.getId();
@@ -46,7 +48,7 @@ public class BankAccount {
         return pin;
     }
 
-    public String getBankName() {
+    public Bank getBankName() {
         return bankName;
     }
 

@@ -1,5 +1,6 @@
 package task4.User;
 
+import task4.Bank.Bank;
 import task4.DBManager;
 import task4.Interfaces.IRepository;
 
@@ -18,7 +19,7 @@ public class BankAccountRepository extends BankAccount implements IRepository<Ba
         try (PreparedStatement pst = conn.prepareStatement(str)) {
             pst.setString(1, bankAccount.contributionName);
             pst.setInt(2, bankAccount.userId);
-            pst.setString(3, bankAccount.bankName);
+            pst.setString(3, bankAccount.bankName.toString());
             pst.setInt(4, bankAccount.pin);
             pst.setBigDecimal(5, bankAccount.balance);
             pst.execute();
@@ -49,7 +50,7 @@ public class BankAccountRepository extends BankAccount implements IRepository<Ba
                         rs.getBigDecimal("balance"),
                         rs.getInt("userId"),
                         rs.getInt("pin"),
-                        rs.getString("bankName")
+                        Bank.MakeFromValue(rs.getString("bankName"))
                 );
             }
         } catch (SQLException e) {

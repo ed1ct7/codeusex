@@ -6,6 +6,8 @@ import task4.User.BankAccountRepository;
 import task4.User.User;
 import task4.User.UserRepository;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Scanner;
 
@@ -141,7 +143,7 @@ public class ATMmachineMyBank implements IATMmachine {
         System.out.println("Задайте pin аккаунту: ");
         int pin = readInt();
 
-        BankAccount bankAccount = new BankAccount(contributionName, 0, currentUser, pin, bankName);
+        BankAccount bankAccount = new BankAccount(contributionName, BigDecimal.ZERO, currentUser, pin, bankName);
         BankAccountRepository bankAccountRepository = new BankAccountRepository();
         bankAccountRepository.InsertMethod(bankAccount);
 
@@ -179,7 +181,7 @@ public class ATMmachineMyBank implements IATMmachine {
         bankAccountInterface();
     }
 
-    private float enterMoney(){
+    private BigDecimal enterMoney(){
         System.out.println("Рублей: ");
         int highDig = sc.nextInt();
         while (highDig < 0){
@@ -193,11 +195,12 @@ public class ATMmachineMyBank implements IATMmachine {
             lowDig = sc.nextInt();
         }
         float money = (float) (highDig + lowDig * 0.01);
+        BigDecimal moneyBigDecimal = new BigDecimal(money).setScale(2, RoundingMode.FLOOR);
         if(money == 0){
             System.out.println("Недопустим ввод 0, повторите попытку...");
             return enterMoney();
         }
-        return money;
+        return moneyBigDecimal;
     }
 
     private void bankAccountInterface() {
@@ -223,18 +226,18 @@ public class ATMmachineMyBank implements IATMmachine {
             } else if (choose == 3) {
                 System.out.println("Сумма снятия: ");
 
-                float result = withdrawBalance(enterMoney());
+                BigDecimal result = withdrawBalance(enterMoney());
 
-                if (result >= 0) {
+                if (result.compareTo(BigDecimal.ZERO) == 1) {
                     System.out.println("Снято: " + result);
                 }
             } else if (choose == 4) {
                 System.out.println("Введите id счёта получателя: ");
                 int id = readInt();
 
-                float result = makeTransaction(id, enterMoney());
+                BigDecimal result = makeTransaction(id, enterMoney());
 
-                if (result >= 0) {
+                if (result.compareTo(BigDecimal.ZERO) == 1) {
                     System.out.println("Переведено: " + result);
                 }
             } else if (choose == 5) {
@@ -254,19 +257,23 @@ public class ATMmachineMyBank implements IATMmachine {
         return true;
     }
 
-    public float substractMoneyOperation(float a, float b){
-        int aLowDigInt = (int) a;
-        int cop = (aLowDigInt - a);
-        return 0;
+    public BigDecimal substractMoneyOperation(BigDecimal a, BigDecimal b){
+        BigDecimal money = a.subtract(b);
+        BigDecimal result = money;
+//        result = ((int) (money * 1000)) / 1000;
+        return result;
     }
-    public float sumMoneyOperation(float a, float b){
-        return 0;
+    public BigDecimal sumMoneyOperation(BigDecimal a, BigDecimal b){
+        BigDecimal money = a.add(b);
+        BigDecimal result = money;
+//        result = ((int) (money * 1000)) / 1000;
+        return result;
     }
 
     @Override
-    public float checkBalance() {
+    public BigDecimal checkBalance() {
         if (!checkPin()) {
-            return -1;
+            return new BigDecimal(-1);
         }
 
         BankAccountRepository repository = new BankAccountRepository();
@@ -275,31 +282,30 @@ public class ATMmachineMyBank implements IATMmachine {
     }
 
     @Override
-    public void replenishBalance(float money) {
+    public void replenishBalance(BigDecimal money) {
         BankAccountRepository repository = new BankAccountRepository();
         BankAccount account = repository.GetById(currentAccount.getId());
-        repository.UpdateBalance(account.getId(), account.getBalance() + money);
+        repository.UpdateBalance(account.getId(), sumMoneyOperation(account.getBalance(), money));
         currentAccount = repository.GetById(currentAccount.getId());
         System.out.println("Баланс после пополнения: " + currentAccount.getBalance());
     }
 
 
     @Override
-    public float withdrawBalance(float money) {
+    public BigDecimal withdrawBalance(BigDecimal money) {
         BankAccountRepository repository = new BankAccountRepository();
         BankAccount account = repository.GetById(currentAccount.getId());
 
-        float total = money;
-        if (!"MyBank".equalsIgnoreCase(account.getBankName())) {
-            total = money + money * 0.02f;
+        BigDecimal total = money;
+        if ((!"Сбербанк".equalsIgnoreCase(account.getBankName()) && total.compareTo(new BigDecimal(100)) == 1)) {
+            total = money.add(money.multiply(new BigDecimal(0.02)));
         }
-
-        if (account.getBalance() < total) {
+        if (account.getBalance().compareTo(total) == -1) {
             System.out.println("Недостаточно средств");
-            return -1;
+            return new BigDecimal(-1);
         }
 
-        repository.UpdateBalance(account.getId(), account.getBalance() - total);
+        repository.UpdateBalance(account.getId(), substractMoneyOperation(account.getBalance(), total));
         currentAccount = repository.GetById(currentAccount.getId());
         System.out.println("Баланс после снятия: " + currentAccount.getBalance());
         return money;
@@ -307,18 +313,18 @@ public class ATMmachineMyBank implements IATMmachine {
 
 
     @Override
-    public float makeTransaction(int id, float money) {
+    public BigDecimal makeTransaction(int id, BigDecimal money) {
         BankAccountRepository repository = new BankAccountRepository();
         BankAccount from = repository.GetById(currentAccount.getId());
         BankAccount to = repository.GetById(id);
 
         if (to == null) {
             System.out.println("Счёт получателя не найден");
-            return -1;
+            return new BigDecimal(-1);
         }
 
-        repository.UpdateBalance(from.getId(), from.getBalance() - money);
-        repository.UpdateBalance(to.getId(), to.getBalance() + money);
+        repository.UpdateBalance(from.getId(), from.getBalance().subtract(money));
+        repository.UpdateBalance(to.getId(), to.getBalance().add(money));
         currentAccount = repository.GetById(currentAccount.getId());
         System.out.println("Баланс после перевода: " + currentAccount.getBalance());
         return money;
@@ -329,12 +335,5 @@ public class ATMmachineMyBank implements IATMmachine {
             sc.next();
         }
         return sc.nextInt();
-    }
-
-    private float readFloat() {
-        while (!sc.hasNextFloat()) {
-            sc.next();
-        }
-        return sc.nextFloat();
     }
 }

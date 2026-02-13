@@ -3,6 +3,7 @@ package task4.User;
 import task4.DBManager;
 import task4.Interfaces.IRepository;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +20,7 @@ public class BankAccountRepository extends BankAccount implements IRepository<Ba
             pst.setInt(2, bankAccount.userId);
             pst.setString(3, bankAccount.bankName);
             pst.setInt(4, bankAccount.pin);
-            pst.setFloat(5, bankAccount.balance);
+            pst.setBigDecimal(5, bankAccount.balance);
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -45,7 +46,7 @@ public class BankAccountRepository extends BankAccount implements IRepository<Ba
                 return new BankAccount(
                         rs.getInt("id"),
                         rs.getString("contributionName"),
-                        rs.getFloat("balance"),
+                        rs.getBigDecimal("balance"),
                         rs.getInt("userId"),
                         rs.getInt("pin"),
                         rs.getString("bankName")
@@ -58,12 +59,12 @@ public class BankAccountRepository extends BankAccount implements IRepository<Ba
         return null;
     }
 
-    public void UpdateBalance(int id, float newBalance) {
+    public void UpdateBalance(int id, BigDecimal newBalance) {
         var conn = DBManager.getInstance().getConnection();
         String sql = "UPDATE BankAccount SET balance = ? WHERE id = ?";
 
         try (PreparedStatement pst = conn.prepareStatement(sql)) {
-            pst.setFloat(1, newBalance);
+            pst.setBigDecimal(1, newBalance);
             pst.setInt(2, id);
             pst.executeUpdate();
         } catch (SQLException e) {
